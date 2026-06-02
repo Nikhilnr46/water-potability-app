@@ -101,4 +101,8 @@ elif page == "📊 EDA":
     st.markdown("---")
     st.subheader("Correlation Heatmap")
     fig3, ax3 = plt.subplots(figsize=(10, 6))
-    sns.heatmap(df
+    corr = df.corr()
+    sns.heatmap(corr, cmap="coolwarm", annot=False, ax=ax3)
+    ax3.set_title("Correlation Heatmap")
+    st.pyplot(fig3)
+
