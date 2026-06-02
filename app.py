@@ -106,3 +106,104 @@ elif page == "📊 EDA":
     ax3.set_title("Correlation Heatmap")
     st.pyplot(fig3)
 
+    st.markdown("---")
+    st.subheader("Missing Values (before fill)")
+    raw_df = pd.read_csv(uploaded_file) if uploaded_file else pd.read_csv("water_potability.csv")
+    st.bar_chart(raw_df.isnull().sum())
+
+# ================================================
+# PAGE 3: PREDICTION
+# ================================================
+elif page == "🔬 Prediction":
+    st.title("🔬 Predict Water Potability")
+
+    ph = st.slider("pH", 0.0, 14.0, 7.0)
+    hardness = st.slider("Hardness", 0.0, 500.0, 200.0)
+    solids = st.slider("Solids (TDS)", 0.0, 50000.0, 10000.0)
+    chloramines = st.slider("Chloramines", 0.0, 10.0, 5.0)
+    sulfate = st.slider("Sulfate", 0.0, 500.0, 250.0)
+    conductivity = st.slider("Conductivity", 0.0, 1000.0, 500.0)
+    organic_carbon = st.slider("Organic Carbon", 0.0, 30.0, 15.0)
+    trihalomethanes = st.slider("Trihalomethanes", 0.0, 150.0, 75.0)
+    turbidity = st.slider("Turbidity", 0.0, 10.0, 5.0)
+
+    user_input = np.array([
+        ph, hardness, solids, chloramines, sulfate,
+        conductivity, organic_carbon, trihalomethanes, turbidity
+    ]).reshape(1, -1)
+
+    user_input_scaled = scaler.transform(user_input)
+
+    if st.button("Predict Potability"):
+        prediction = model.predict(user_input_scaled)[0]
+        if prediction == 1:
+            st.success("✅ The water is predicted to be **Potable (Safe to Drink)**")
+        else:
+            st.error("❌ The water is predicted to be **Not Potable (Unsafe)**")
+            st.warning("💡 Unsafe water leads to wastage when supplied. This highlights the importance of resource efficiency.")
+
+    st.markdown("---")
+    st.subheader("Model Performance on Test Data")
+
+    y_pred = model.predict(X_test)
+    metrics = {
+        "Accuracy": accuracy_score(y_test, y_pred),
+        "Precision": precision_score(y_test, y_pred),
+        "Recall": recall_score(y_test, y_pred),
+        "F1 Score": f1_score(y_test, y_pred)
+    }
+    st.table(pd.DataFrame(metrics, index=["Score"]).T)
+
+    fig4, ax4 = plt.subplots()
+    ConfusionMatrixDisplay.from_predictions(y_test, y_pred, ax=ax4)
+    st.pyplot(fig4)
+
+# ================================================
+# PAGE 4: ABOUT
+# ================================================
+elif page == "ℹ️ About":
+    st.title("ℹ️ About This Project")
+
+    st.markdown("""
+    ## 💧 Water Potability Prediction
+
+    **Name:** Nikhil Vasista N R  
+    **SRN:** PES1PG25CA305  
+    **Domain:** Environment & Climate  
+    **Goal:** SDG 12 – Responsible Consumption and Production  
+
+    ---
+
+    ### 📁 Dataset
+    - **Source:** [Kaggle — Water Quality Dataset](https://www.kaggle.com/datasets/adityakadiwal/water-potability)
+    - **Samples:** ~3,276 rows
+    - **Target:** `Potability` (1 = Safe, 0 = Unsafe)
+
+    ---
+
+    ### 🧪 Features
+    | Feature | Description |
+    |---|---|
+    | pH | Acidity/alkalinity of water (WHO: 6.5–8.5) |
+    | Hardness | Calcium & magnesium content (mg/L) |
+    | Solids (TDS) | Total dissolved solids (mg/L) |
+    | Chloramines | Disinfectant level (ppm) |
+    | Sulfate | Sulfate concentration (mg/L) |
+    | Conductivity | Electrical conductivity (μS/cm) |
+    | Organic Carbon | Total organic carbon (ppm) |
+    | Trihalomethanes | Byproducts of disinfection (μg/L) |
+    | Turbidity | Clarity of water (NTU) |
+
+    ---
+
+    ### 🤖 Models Used
+    - Logistic Regression — Fast, interpretable baseline classifier.
+    - Random Forest — Ensemble method, typically higher accuracy.
+
+    ---
+
+    ### 🛠️ Tech Stack
+    Python · Streamlit · Scikit-learn · Pandas · Matplotlib · Seaborn
+    """)
+
+    st.caption("Built as a machine learning demo project for PES University.")
