@@ -2,11 +2,20 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import classification_report, ConfusionMatrixDisplay
+from sklearn.metrics import (
+    classification_report,
+    confusion_matrix,
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    ConfusionMatrixDisplay
+)
 
 # -------------------------------
 # Page Config
@@ -58,7 +67,6 @@ else:
 
 model.fit(X_train, y_train)
 
-
 # ================================================
 # PAGE 1: HOME
 # ================================================
@@ -87,7 +95,6 @@ if page == "🏠 Home":
              f"**Potable:** {int(df['Potability'].sum())}  |  "
              f"**Not Potable:** {int((df['Potability'] == 0).sum())}")
     st.dataframe(df.head())
-
 
 # ================================================
 # PAGE 2: EDA
@@ -123,12 +130,7 @@ elif page == "📊 EDA":
     st.subheader("Correlation Heatmap")
     fig3, ax3 = plt.subplots(figsize=(10, 6))
     corr = df.corr()
-    im = ax3.imshow(corr, cmap="coolwarm", aspect="auto")
-    ax3.set_xticks(range(len(corr.columns)))
-    ax3.set_yticks(range(len(corr.columns)))
-    ax3.set_xticklabels(corr.columns, rotation=45, ha="right", fontsize=9)
-    ax3.set_yticklabels(corr.columns, fontsize=9)
-    plt.colorbar(im, ax=ax3)
+    sns.heatmap(corr, cmap="coolwarm", annot=False, ax=ax3)
     ax3.set_title("Correlation Heatmap")
     st.pyplot(fig3)
 
@@ -136,7 +138,6 @@ elif page == "📊 EDA":
     st.subheader("Missing Values (before fill)")
     raw_df = pd.read_csv(uploaded_file) if uploaded_file else pd.read_csv("water_potability.csv")
     st.bar_chart(raw_df.isnull().sum())
-
 
 # ================================================
 # PAGE 3: PREDICTION
@@ -170,17 +171,24 @@ elif page == "🔬 Prediction":
             st.success("✅ The water is predicted to be **Potable (Safe to Drink)**")
         else:
             st.error("❌ The water is predicted to be **Not Potable (Unsafe)**")
+            st.warning("💡 Unsafe water leads to wastage when supplied. This highlights the importance of resource efficiency.")
 
     st.markdown("---")
     st.subheader("Model Performance on Test Data")
 
     y_pred = model.predict(X_test)
-    st.text(classification_report(y_test, y_pred))
+
+    metrics = {
+        "Accuracy": accuracy_score(y_test, y_pred),
+        "Precision": precision_score(y_test, y_pred),
+        "Recall": recall_score(y_test, y_pred),
+        "F1 Score": f1_score(y_test, y_pred)
+    }
+    st.table(pd.DataFrame(metrics, index=["Score"]).T)
 
     fig4, ax4 = plt.subplots()
     ConfusionMatrixDisplay.from_predictions(y_test, y_pred, ax=ax4)
     st.pyplot(fig4)
-
 
 # ================================================
 # PAGE 4: ABOUT
@@ -191,7 +199,10 @@ elif page == "ℹ️ About":
     st.markdown("""
     ## 💧 Water Potability Prediction
 
-    **Goal:** Predict whether water is safe for human consumption using machine learning.
+    **Name:** Nikhil Vasista N R  
+    **SRN:** PES1PG25CA305  
+    **Domain:** Environment & Climate  
+    **Goal:** SDG 12 – Responsible Consumption and Production  
 
     ---
 
@@ -210,22 +221,4 @@ elif page == "ℹ️ About":
     | Solids (TDS) | Total dissolved solids (mg/L) |
     | Chloramines | Disinfectant level (ppm) |
     | Sulfate | Sulfate concentration (mg/L) |
-    | Conductivity | Electrical conductivity (μS/cm) |
-    | Organic Carbon | Total organic carbon (ppm) |
-    | Trihalomethanes | Byproducts of disinfection (μg/L) |
-    | Turbidity | Clarity of water (NTU) |
-
-    ---
-
-    ### 🤖 Models Used
-    - **Logistic Regression** — Fast, interpretable baseline classifier.
-    - **Random Forest** — Ensemble method, typically higher accuracy.
-
-    ---
-
-    ### 🛠️ Tech Stack
-    `Python` · `Streamlit` · `Scikit-learn` · `Pandas` · `Matplotlib`
-    """)
-
-    st.markdown("---")
-    st.caption("Built as a machine learning demo project.")
+    |
